@@ -4,10 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gabo Type</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --green: #00b755;
+            --yellow: #daaf38;
+            --red: #ca4754;
+            --black: #222;
+            --gray: #999;
+        }
+        body {
+            background: var(--black);
+            color: var(--gray);
+            font-family: Menlo, monospace;
+            display: grid;
+            place-content: center;
+            padding: 32px;
+        }
+        section{
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 500px;
+        }
+        time{
+            color: var(--yellow);
+        }
+        input{
+            z-index: -999;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        p{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px 8px;
+        }
+    </style>
 </head>
 <body>
     <main>
-        Monkey
+        <section id="game">
+            <time></time>
+            <p></p>
+            <input autofocus>
+        </section>
     </main>
 </body>
+<script>
+    const $time = document.querySelector('time')
+    const $paragraph = document.querySelector('p')
+    const $input = document.querySelector('input')
+
+    const INITIAL_TIME = 30;
+
+    const TEXT = 'the quick brown fox jumps over the lazy dog and gabo is trying to clone monkey type for fun and profit using vainilla js for the typing test speed'
+
+    let words = []
+
+    let currentTime = INITIAL_TIME
+
+    initGame()
+    initEvents()
+
+    function initGame() {
+        words = TEXT.split(' ').slice(0,32)
+        currentTime = INITIAL_TIME;
+
+        $time.textContent = currentTime
+
+        $paragraph.innerHTML = words.map((word, index) => {
+            const letters = word.split('')
+
+            return `
+             <x-word>
+                ${letters
+                    .map(letter => `<x-letter>${letter}</x-letter>`)
+                    .join('')
+                }
+             </x-word>
+            `
+        }).join('')
+    }
+    function initEvents () {}
+</script>
+
 </html>
