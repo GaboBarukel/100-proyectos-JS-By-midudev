@@ -14,8 +14,7 @@
             --gray: #999;
         }
         body {
-            background: var(--black);
-            color: var(--gray);
+            background: var(--black);            
             font-family: Menlo, monospace;
             display: grid;
             place-content: center;
@@ -25,7 +24,7 @@
             padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 4px;
             max-width: 500px;
         }
         time{
@@ -42,6 +41,29 @@
             display: flex;
             flex-wrap: wrap;
             gap: 3px 8px;
+            margin: 0;
+        }
+        x-letter {
+            color: var(--gray);
+            position: relative;
+
+            &.active::before{
+                content: '|';
+                color: var(--yellow);
+                font-size: 14px;
+                position: absolute;
+                left: -60%;
+                animation: 1s blink infinite ease-in-out;
+            }
+        }
+
+        @keyframes blink {
+            0%,25%{
+                opacity: 1;
+            }
+            75%{
+                opacity: 0;
+            }
         }
     </style>
 </head>
@@ -88,8 +110,26 @@
              </x-word>
             `
         }).join('')
+
+        const $firstWord = $paragraph.querySelector('x-word')
+        $firstWord.classList.add('active')
+        $firstWord.querySelector('x-letter').classList.add('active')
+
+        const intervalId = setInterval(() => {
+            currentTime--
+            $time.textContent = currentTime
+
+            if(currentTime == 0){
+                clearInterval(intervalId)
+                gameOver()
+            }
+        }, 1000)
     }
     function initEvents () {}
+    
+    function gameOver () {
+        console.log('Game Over')        
+    }
 </script>
 
 </html>
