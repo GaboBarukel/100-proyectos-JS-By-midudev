@@ -36,6 +36,7 @@
             top: 0;
             left: 0;
             pointer-events: none;
+            opacity: 0;
         }
         p{
             display: flex;
@@ -55,6 +56,27 @@
                 left: -60%;
                 animation: 1s blink infinite ease-in-out;
             }
+
+            &.active.is-last::before{
+                left: 60%;
+            }
+
+            &.correct{
+                color: var(--green);
+            }
+
+            &.incorrect {
+                color: var(--red);
+            }
+        }
+
+        x-word {
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s ease-in-out;
+
+            &.marked{
+                border-color: var(--red);
+            }
         }
 
         @keyframes blink {
@@ -63,6 +85,44 @@
             }
             75%{
                 opacity: 0;
+            }
+        }
+
+        #game{
+            display: block;
+        }
+
+        #results{
+            display: none;
+        }
+        h2{
+            font-weight: 400;
+            opacity: .4;
+            margin: 0;
+            font-size: 16px;
+            color: var(--gray);
+        }
+        h3{
+            font-weight: 400;
+            margin: 0;
+            font-size: 24px;
+            color: var(--yellow);
+        }
+        button{
+            color: var(--gray);
+            cursor: pointer;
+            background: transparent;
+            border: 0;
+            margin-top: 16px;
+            padding: 8px;
+            opacity: .4;
+            display: inline-block;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            border-radius: 16px;
+            &:hover{
+                background-color: #444;
+                opacity: 1;
+                scale: 110%;
             }
         }
     </style>
@@ -74,16 +134,32 @@
             <p></p>
             <input autofocus>
         </section>
+        <section id="results">
+            <h2>wpm</h2>
+            <h3 id="wpm-results"></h3>
+
+            <h2>accuracy</h2>
+            <h3 id="accuracy-results"></h3>
+
+            <button id="reload-button">
+                <svg width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="1.5"  stroke-linecap="round"  stroke-linejoin="round" ><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.933 13.041a8 8 0 1 1 -9.925 -8.788c3.899 -1 7.935 1.007 9.425 4.747" /><path d="M20 4v5h-5" /></svg>
+            </button>
+        </section>
     </main>
 </body>
-<script>
+<script type="module">
+    import { words as INITIAL_WORDS } from './data.js'
+
     const $time = document.querySelector('time')
     const $paragraph = document.querySelector('p')
     const $input = document.querySelector('input')
+    const $game = document.querySelector('#game')
+    const $results = document.querySelector('#results')
+    const $wpm = $results.querySelector('#wpm-results')
+    const $accuracy = $results.querySelector('#accuracy-results')
+    const $reloadButton = document.querySelector('#reload-button')
 
     const INITIAL_TIME = 30;
-
-    const TEXT = 'the quick brown fox jumps over the lazy dog and gabo is trying to clone monkey type for fun and profit using vainilla js for the typing test speed'
 
     let words = []
 
@@ -93,7 +169,13 @@
     initEvents()
 
     function initGame() {
-        words = TEXT.split(' ').slice(0,32)
+        $game.style.display = 'flex'
+        $results.style.display = 'none'
+        $input.value = ''
+        
+        words = INITIAL_WORDS.toSorted(
+            () => Math.random() - 0.5
+        ).slice(0,32)
         currentTime = INITIAL_TIME;
 
         $time.textContent = currentTime
@@ -125,10 +207,116 @@
             }
         }, 1000)
     }
-    function initEvents () {}
+    function initEvents () {
+        document.addEventListener('keydown',() => {
+            $input.focus();
+        })
+        $input.addEventListener('keydown', onKeyDown)
+        $input.addEventListener('keyup', onKeyUp)
+        $reloadButton.addEventListener('click', initGame)
+    }
+
+    function onKeyDown(event){
+        const $currentWord = $paragraph.querySelector('x-word.active')
+        const $currentLetter = $currentWord.querySelector('x-letter.active')
+
+        const { key } = event
+        if (key == ' '){
+            event.preventDefault()
+
+            const $nextWord = $currentWord.nextElementSibling
+            const $nextLetter = $nextWord.querySelector('x-letter')
+
+            $currentWord.classList.remove('active', 'marked')
+            $currentLetter.classList.remove('active')
+
+            $nextWord.classList.add('active')
+            $nextLetter.classList.add('active')
+
+            $input.value = ''
+
+            const hasMissedLetters = $currentWord.querySelectorAll('x-letter:not(.correct)').length > 0
+            const classToAdd = hasMissedLetters ? 'marked' : 'correct'
+            $currentWord.classList.add(classToAdd)
+            return
+        }
+
+        if(key == 'Backspace') {
+            const $prevWord = $currentWord.previousElementSibling
+            const $prevLetter = $currentLetter.previousElementSibling
+
+            if(!$prevWord && !$prevLetter){
+                event.preventDefault()
+                return
+            }
+
+            const $wordMarked = $paragraph.querySelector('x-word.marked')
+            if($wordMarked && !$prevLetter){
+                event.preventDefault()
+                $prevWord.classList.remove('marked')
+                $prevWord.classList.add('active')
+
+                const $letterToGo = $prevWord.querySelector('x-letter:last-child')
+
+                $currentLetter.classList.remove('active')
+                $letterToGo.classList.add('active')
+
+                $input.value = [
+                    ...$prevWord.querySelectorAll('x-letter.correct,x-letter.incorrect')
+                ].map($el => {
+                    return $el.classList.contains('correct') ? $el.innerText : '*'                    
+                }).join('')
+            }
+        }
+    }
+
+    function onKeyUp(){
+        const $currentWord = $paragraph.querySelector('x-word.active')
+        const $currentLetter = $currentWord.querySelector('x-letter.active')
+
+        const currentWord = $currentWord.innerText.trim()
+        $input.maxLength = currentWord.length
+       
+        const $allLetters = $currentWord.querySelectorAll('x-letter')
+
+        $allLetters.forEach($letter => $letter.classList.remove('correct','incorrect'))
+
+        $input.value.split('').forEach((char,index) => {
+            const $letter = $allLetters[index]
+            const letterToCheck = currentWord[index]
+
+            const isCorrect = char == letterToCheck
+            const letterClass = isCorrect ? 'correct' : 'incorrect'
+            $letter.classList.add(letterClass)
+        })
+
+        $currentLetter.classList.remove('active', 'is-last')
+        const inputLength = $input.value.length
+        const $nextActiveLetter = $allLetters[inputLength]
+
+        if($nextActiveLetter){
+            $nextActiveLetter.classList.add('active')
+        } else {
+            $currentLetter.classList.add('active', 'is-last')
+        }
+
+    }
     
     function gameOver () {
-        console.log('Game Over')        
+        $game.style.display = 'none'
+        $results.style.display = 'flex'
+
+        const correctWords = $paragraph.querySelectorAll('x-word.correct').length
+        const correctLetters = $paragraph.querySelectorAll('x-letter.correct').length
+        const incorrectLetters = $paragraph.querySelectorAll('x-letter.incorrect').length
+
+        const totalLetters = correctLetters + incorrectLetters
+        const accuracy = totalLetters > 0 ? (correctLetters / totalLetters) * 100 : 0
+        const wpm = (correctWords * 60) / INITIAL_TIME
+
+        //REVISAR CUANDO SE PONE EL ESTADO "CORRECT" EN LA PALABRA PARA QUE DE BIEN EL WPM(BARRA ESPACIADORA)
+        $wpm.textContent = wpm
+        $accuracy.textContent = `%${accuracy.toFixed(2)}`
     }
 </script>
 
