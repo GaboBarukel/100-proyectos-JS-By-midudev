@@ -110,7 +110,7 @@
         if (currentBrick.status === BRICK_STATUS.DESTROYED) continue;
 
         const clipX = currentBrick.color * 32;
-        // debugger;
+
         ctx.drawImage(
           $bricks,
           clipX,
@@ -132,7 +132,6 @@
         const currentBrick = bricks[c][r];
         if (currentBrick.status === BRICK_STATUS.DESTROYED) continue;
 
-        debugger;
         const isBallSameXAsBrick =
           x > currentBrick.x && x < currentBrick.x + brickWidth;
 
@@ -152,6 +151,7 @@
     if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
       dx = -dx;
     }
+
     // rebotar la pelota la parte superior
     if (y + dy < ballRadius) {
       dy = -dy;
@@ -159,12 +159,15 @@
 
     //la pelota toca la parte inferior o toca la pala
     const isBallSameXAsPaddle = x < paddleX + paddleWidth && x > paddleX;
-    const isBallTouchingPaddle = y + ballRadius > paddleY;
+
+    const isBallTouchingPaddle =
+      y + dy > paddleY && y + dy < paddleY + paddleHeight;
+    debugger;
     if (isBallSameXAsPaddle && isBallTouchingPaddle) {
       dy = -dy;
     } else if (
       y + dy > canvas.height - ballRadius ||
-      y + dy > paddleY + paddleHeight
+      y + dy >= paddleY + paddleHeight
     ) {
       console.log("Game Over");
     }
@@ -182,7 +185,6 @@
   }
 
   function cleanCanvas() {
-    // debugger;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
