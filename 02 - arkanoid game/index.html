@@ -26,6 +26,10 @@
 
   canvas.width = 448;
   canvas.height = 400;
+
+  /* VARIABLES DE JUEGO */
+  let isGameOn = false;
+
   /* VARIABLES DE LA PELOTA */
   const ballRadius = 3;
   //posición de la pelota
@@ -89,6 +93,21 @@
     ctx.closePath();
   }
 
+  function restartGame() {
+    //reinicio el juego
+    isGameOn = false;
+    // reinicio las variables de la pelota
+    x = canvas.width / 2;
+    y = canvas.height - 30;
+    dx = -3;
+    dy = -3;
+    //reinicio las variables de la paleta
+    paddleX = (canvas.width - paddleWidth) / 2;
+    paddleY = canvas.height - paddleHeight - 10;
+    drawBall();
+    drawPaddle();
+  }
+
   function drawPaddle() {
     ctx.drawImage(
       $sprite,
@@ -115,8 +134,8 @@
           $bricks,
           clipX,
           0,
-          brickWidth, // -> revisar
-          brickHeight, // -> revisar
+          brickWidth,
+          brickHeight,
           currentBrick.x,
           currentBrick.y,
           brickWidth,
@@ -147,40 +166,45 @@
   }
 
   function ballMovement() {
-    // rebotar la pelota en los laterales
-    if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
-      dx = -dx;
+    if (isGameOn) {
+      // rebotar la pelota en los laterales
+      if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+        dx = -dx;
+      }
+      // rebotar la pelota la parte superior
+      if (y + dy < ballRadius) {
+        dy = -dy;
+      }
+      //la pelota toca la parte inferior o toca la pala
+      const isBallSameXAsPaddle = x < paddleX + paddleWidth && x > paddleX;
+      const isBallTouchingPaddle =
+        y + dy > paddleY && y + dy < paddleY + paddleHeight;
+
+      if (isBallSameXAsPaddle && isBallTouchingPaddle) {
+        dy = -dy;
+      } else if (
+        y + dy > canvas.height - ballRadius ||
+        y + dy >= paddleY + paddleHeight
+      ) {
+        restartGame();
+      }
+
+      x += dx;
+      y += dy;
     }
-
-    // rebotar la pelota la parte superior
-    if (y + dy < ballRadius) {
-      dy = -dy;
-    }
-
-    //la pelota toca la parte inferior o toca la pala
-    const isBallSameXAsPaddle = x < paddleX + paddleWidth && x > paddleX;
-
-    const isBallTouchingPaddle =
-      y + dy > paddleY && y + dy < paddleY + paddleHeight;
-    debugger;
-    if (isBallSameXAsPaddle && isBallTouchingPaddle) {
-      dy = -dy;
-    } else if (
-      y + dy > canvas.height - ballRadius ||
-      y + dy >= paddleY + paddleHeight
-    ) {
-      console.log("Game Over");
-    }
-
-    x += dx;
-    y += dy;
   }
 
   function paddleMovement() {
     if (rightPressed && paddleX < canvas.width - paddleWidth) {
       paddleX += PADDLE_SENSITIVY;
+      if (!isGameOn) {
+        x += PADDLE_SENSITIVY;
+      }
     } else if (leftPressed && paddleX > 0) {
       paddleX -= PADDLE_SENSITIVY;
+      if (!isGameOn) {
+        x -= PADDLE_SENSITIVY;
+      }
     }
   }
 
@@ -198,6 +222,11 @@
         rightPressed = true;
       } else if (key === "Left" || key === "ArrowLeft") {
         leftPressed = true;
+      } else if (key === "s" || key === "S") {
+        if (x > canvas.width / 2) {
+          dx = 3;
+        }
+        isGameOn = !isGameOn;
       }
     }
 
