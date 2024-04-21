@@ -55,12 +55,12 @@
 
   /* VARIABLES DE LOS LOS LADRILLOS */
   const brickRowCount = 6;
-  const brickColumnCount = 13;
+  const brickColumnCount = 11; // lo cambie para probar colisi{on de costado}
   const brickWidth = 32;
   const brickHeight = 16;
   const brickPadding = 0;
   const brickOffsetTop = 80;
-  const brickOffsetLeft = 16;
+  const brickOffsetLeft = 48; // lo cambie apra probar colision del costado
   const bricks = [];
 
   const BRICK_STATUS = {
@@ -157,10 +157,18 @@
           x > currentBrick.x && x < currentBrick.x + brickWidth;
 
         const isBallSameYAsBrick =
-          y > currentBrick.y && y < currentBrick.y + brickHeight;
+          y >= currentBrick.y && y <= currentBrick.y + brickHeight;
+
+        //REVISAR COLISION DEL LADRILLO DEL COSTADO
+        const isBallSameXAsBrickFromSide =
+          x === currentBrick.x || x === currentBrick.x + brickWidth;
 
         if (isBallSameXAsBrick && isBallSameYAsBrick) {
           dy = -dy;
+          currentBrick.status = BRICK_STATUS.DESTROYED;
+        }
+        if (isBallSameXAsBrickFromSide && isBallSameYAsBrick) {
+          dx = -dx;
           currentBrick.status = BRICK_STATUS.DESTROYED;
         }
       }
