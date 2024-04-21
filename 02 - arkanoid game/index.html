@@ -28,6 +28,7 @@
   canvas.height = 400;
 
   /* VARIABLES DE JUEGO */
+  let isGameStarting = true;
   let isGameOn = false;
 
   /* VARIABLES DE LA PELOTA */
@@ -96,6 +97,7 @@
   function restartGame() {
     //reinicio el juego
     isGameOn = false;
+    isGameStarting = true;
     // reinicio las variables de la pelota
     x = canvas.width / 2;
     y = canvas.height - 30;
@@ -196,13 +198,15 @@
 
   function paddleMovement() {
     if (rightPressed && paddleX < canvas.width - paddleWidth) {
-      paddleX += PADDLE_SENSITIVY;
-      if (!isGameOn) {
+      paddleX =
+        isGameOn || isGameStarting ? (paddleX += PADDLE_SENSITIVY) : paddleX;
+      if (!isGameOn && isGameStarting) {
         x += PADDLE_SENSITIVY;
       }
     } else if (leftPressed && paddleX > 0) {
-      paddleX -= PADDLE_SENSITIVY;
-      if (!isGameOn) {
+      paddleX =
+        isGameOn || isGameStarting ? (paddleX -= PADDLE_SENSITIVY) : paddleX;
+      if (!isGameOn && isGameStarting) {
         x -= PADDLE_SENSITIVY;
       }
     }
@@ -223,9 +227,10 @@
       } else if (key === "Left" || key === "ArrowLeft") {
         leftPressed = true;
       } else if (key === "s" || key === "S") {
-        if (x > canvas.width / 2) {
+        if (x > canvas.width / 2 && isGameStarting) {
           dx = 3;
         }
+        isGameStarting = isGameStarting ? !isGameStarting : isGameStarting;
         isGameOn = !isGameOn;
       }
     }
