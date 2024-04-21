@@ -55,12 +55,12 @@
 
   /* VARIABLES DE LOS LOS LADRILLOS */
   const brickRowCount = 6;
-  const brickColumnCount = 11; // lo cambie para probar colisi{on de costado}
+  const brickColumnCount = 11; // lo cambie para probar colision de costado
   const brickWidth = 32;
   const brickHeight = 16;
-  const brickPadding = 0;
+  const brickPadding = 1;
   const brickOffsetTop = 80;
-  const brickOffsetLeft = 48; // lo cambie apra probar colision del costado
+  const brickOffsetLeft = 38; // lo cambie apra probar colision del costado
   const bricks = [];
 
   const BRICK_STATUS = {
@@ -152,24 +152,28 @@
       for (let r = 0; r < brickRowCount; r++) {
         const currentBrick = bricks[c][r];
         if (currentBrick.status === BRICK_STATUS.DESTROYED) continue;
-
+        /*REVISAR COLISION
+        encontrar una forma de agrandar la zona de impacto en la pelota
+        o de medir de manera más precisa la zona de impacto del ladrillo
+        */
         const isBallSameXAsBrick =
           x > currentBrick.x && x < currentBrick.x + brickWidth;
 
         const isBallSameYAsBrick =
-          y >= currentBrick.y && y <= currentBrick.y + brickHeight;
+          y > currentBrick.y && y < currentBrick.y + brickHeight;
 
-        //REVISAR COLISION DEL LADRILLO DEL COSTADO
+        //COLISION DEL LADRILLO DEL COSTADO
         const isBallSameXAsBrickFromSide =
-          x === currentBrick.x || x === currentBrick.x + brickWidth;
+          x + ballRadius + dx === currentBrick.x ||
+          x - ballRadius + dx === currentBrick.x + brickWidth;
 
-        if (isBallSameXAsBrick && isBallSameYAsBrick) {
-          dy = -dy;
-          currentBrick.status = BRICK_STATUS.DESTROYED;
-        }
         if (isBallSameXAsBrickFromSide && isBallSameYAsBrick) {
-          dx = -dx;
           currentBrick.status = BRICK_STATUS.DESTROYED;
+          dx = -dx;
+        }
+        if (isBallSameXAsBrick && isBallSameYAsBrick) {
+          currentBrick.status = BRICK_STATUS.DESTROYED;
+          dy = -dy;
         }
       }
     }
